@@ -1,0 +1,111 @@
+
+--// CONFIG
+local USE_KEY = false
+local KEY = "12345"
+
+local LINKS = {
+    discord = "https://discord.gg/yourlink",
+    key = "12345"
+}
+
+--// GAME MAP
+local SCRIPTS = {
+    [126509999114328] = "https://raw.githubusercontent.com/DG181/Gooner-Hub/refs/heads/main/99nights",
+    [79546208627805]  = "https://raw.githubusercontent.com/DG181/Gooner-Hub/refs/heads/main/99nights",
+    [139233844569220] = "https://raw.githubusercontent.com/DG181/Gooner-Hub/refs/heads/main/Zoo%20or%20Oof"
+}
+
+--// LOAD FUNCTION
+local function runScript()
+    local id = game.PlaceId
+    local url = SCRIPTS[id]
+
+    if not url then
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "Gooner Hub",
+            Text = "Game not supported",
+            Duration = 5
+        })
+        return
+    end
+
+    local ok = pcall(function()
+        loadstring(game:HttpGet(url, true))()
+    end)
+
+    if not ok then
+        warn("Failed to load script")
+    end
+end
+
+--// NO KEY SYSTEM
+if not USE_KEY then
+    runScript()
+    return
+end
+
+--// UI LOAD
+local Rayfield
+for _, src in ipairs({
+    "https://sirius.menu/rayfield",
+    "https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/main/source.lua"
+}) do
+    local ok, lib = pcall(function()
+        return loadstring(game:HttpGet(src))()
+    end)
+    if ok then
+        Rayfield = lib
+        break
+    end
+end
+
+if not Rayfield then return end
+
+--// WINDOW
+local win = Rayfield:CreateWindow({
+    Name = "Gooner Hub",
+    LoadingTitle = "Gooner Hub",
+    LoadingSubtitle = "Access",
+    ConfigurationSaving = { Enabled = false },
+    KeySystem = false
+})
+
+local tab = win:CreateTab("Key", 4483362458)
+
+--// INPUT
+tab:CreateInput({
+    Name = "Enter Key",
+    PlaceholderText = "key here",
+    Callback = function(text)
+        if tostring(text) == tostring(KEY) then
+            Rayfield:Notify({
+                Title = "Access Granted",
+                Content = "Loading...",
+                Duration = 2
+            })
+            task.wait(0.4)
+            runScript()
+        else
+            Rayfield:Notify({
+                Title = "Denied",
+                Content = "Wrong key",
+                Duration = 2
+            })
+        end
+    end
+})
+
+--// BUTTONS
+tab:CreateButton({
+    Name = "Get Key",
+    Callback = function()
+        setclipboard(LINKS.key)
+    end
+})
+
+tab:CreateButton({
+    Name = "Discord",
+    Callback = function()
+        setclipboard(LINKS.discord)
+    end
+})
