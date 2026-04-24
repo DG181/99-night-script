@@ -1,18 +1,12 @@
--- Gooner Hub | Loader
+-- Gooner Hub | Loader (No Key)
 
 local _game = game
 local _loadstring = loadstring
 local _pcall = pcall
 local _tostring = tostring
 local _warn = warn
-local _task = task
 
-local USE_KEY = false
-local KEY = "12345"
-
-local DISCORD = "https://discord.gg/yourlink"
-local KEY_LINK = "12345"
-
+--// NOTIFY
 local function notify(title, msg, dur)
     _pcall(function()
         _game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -23,6 +17,7 @@ local function notify(title, msg, dur)
     end)
 end
 
+--// GAME DETECTION
 local function getUrl()
     local pid = _tostring(_game.PlaceId)
     local gid = _tostring(_game.GameId)
@@ -31,7 +26,7 @@ local function getUrl()
     if pid == "126509999114328" or pid == "79546208627805" or gid == "7326934954" then
         return "https://raw.githubusercontent.com/DG181/Gooner-Hub/refs/heads/main/99nights"
 
-    -- Zoo or Oof
+    -- Zoo / Oof
     elseif pid == "139233844569220" then
         return "https://raw.githubusercontent.com/DG181/Gooner-Hub/refs/heads/main/Zoo%20or%20Oof"
 
@@ -43,118 +38,48 @@ local function getUrl()
     return nil
 end
 
+--// MAIN RUN
 local function run()
     local url = getUrl()
 
     if not url then
         local pid = _tostring(_game.PlaceId)
         _warn("[GoonerHub] unsupported place -> " .. pid)
-        notify("Gooner Hub", "not supported | " .. pid, 5)
+        notify("Gooner Hub", "Not supported (" .. pid .. ")", 5)
         return
     end
 
+    -- fetch
     local ok1, content = _pcall(function()
         return _game:HttpGet(url, true)
     end)
 
     if not ok1 then
         _warn("[GoonerHub] fetch failed -> " .. _tostring(content))
-        notify("Gooner Hub", "fetch failed", 4)
+        notify("Gooner Hub", "Failed to fetch script", 4)
         return
     end
 
-    if not content or #content < 5 then
-        _warn("[GoonerHub] empty response from url")
-        notify("Gooner Hub", "empty response", 4)
+    if not content or #content < 10 then
+        _warn("[GoonerHub] empty or invalid response")
+        notify("Gooner Hub", "Invalid script response", 4)
         return
     end
 
-    local ok2, err = _pcall(function()
-        local fn, compErr = _loadstring(content)
-        if not fn then
-            error(compErr)
-        end
-        fn()
-    end)
+    -- execute
+    local fn, compErr = _loadstring(content)
+    if not fn then
+        _warn("[GoonerHub] compile error -> " .. _tostring(compErr))
+        notify("Gooner Hub", "Compile error", 4)
+        return
+    end
 
+    local ok2, runErr = _pcall(fn)
     if not ok2 then
-        _warn("[GoonerHub] exec error -> " .. _tostring(err))
-        notify("Gooner Hub", "exec failed - check console", 4)
+        _warn("[GoonerHub] runtime error -> " .. _tostring(runErr))
+        notify("Gooner Hub", "Execution failed (check console)", 4)
     end
 end
 
--- no key system, just run
-if not USE_KEY then
-    run()
-    return
-end
-
--- rayfield loader
-local Rayfield
-for _, src in ipairs({
-    "https://sirius.menu/rayfield",
-    "https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/main/source.lua"
-}) do
-    local ok, lib = _pcall(function()
-        return _loadstring(_game:HttpGet(src, true))()
-    end)
-    if ok and lib then
-        Rayfield = lib
-        break
-    end
-end
-
-if not Rayfield then
-    _warn("[GoonerHub] rayfield failed to load")
-    return
-end
-
-local win = Rayfield:CreateWindow({
-    Name = "Gooner Hub",
-    LoadingTitle = "Gooner Hub",
-    LoadingSubtitle = "by dg",
-    ConfigurationSaving = { Enabled = false },
-    KeySystem = false
-})
-
-local tab = win:CreateTab("Key", 4483362458)
-
-tab:CreateInput({
-    Name = "Enter Key",
-    PlaceholderText = "paste key...",
-    RemoveTextAfterFocusLost = false,
-    Callback = function(input)
-        local trimmed = _tostring(input):gsub("%s+", "")
-        if trimmed == _tostring(KEY) then
-            Rayfield:Notify({
-                Title = "unlocked",
-                Content = "loading...",
-                Duration = 2
-            })
-            _task.wait(0.4)
-            run()
-        else
-            Rayfield:Notify({
-                Title = "wrong key",
-                Content = "try again",
-                Duration = 3
-            })
-        end
-    end
-})
-
-tab:CreateButton({
-    Name = "Get Key",
-    Callback = function()
-        setclipboard(KEY_LINK)
-        Rayfield:Notify({ Title = "copied", Content = "key link copied", Duration = 2 })
-    end
-})
-
-tab:CreateButton({
-    Name = "Discord",
-    Callback = function()
-        setclipboard(DISCORD)
-        Rayfield:Notify({ Title = "copied", Content = "discord copied", Duration = 2 })
-    end
-})
+--// START
+run()
